@@ -24,7 +24,7 @@ CREATE TABLE turnstile (
 
 CREATE TABLE turnstile_summary
 WITH (VALUE_FORMAT = 'JSON') AS
-    SELECT COUNT(station_id) AS count
+    SELECT station_id, COUNT(station_id) AS count
     FROM turnstile
     GROUP BY station_id;
 """
@@ -33,6 +33,7 @@ WITH (VALUE_FORMAT = 'JSON') AS
 def execute_statement():
     """Executes the KSQL statement against the KSQL API"""
     if topic_check.topic_exists("TURNSTILE_SUMMARY") is True:
+        logging.debug("TURNSTILE_SUMMARY already exists")
         return
 
     logging.debug("executing ksql statement...")

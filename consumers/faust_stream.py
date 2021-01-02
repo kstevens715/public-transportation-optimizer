@@ -31,7 +31,7 @@ class TransformedStation(faust.Record):
 
 app = faust.App("stations-stream", broker="kafka://localhost:9092", store="memory://")
 topic = app.topic("connect-stations", value_type=Station)
-out_topic = app.topic("connect-stations.transformed", partitions=1)
+out_topic = app.topic("org.chicago.cta.stations.table.v1", partitions=1)
 
 table = app.Table(
     "connect-stations.transformed",
@@ -44,17 +44,18 @@ table = app.Table(
 @app.agent(topic)
 async def station_transform(stations):
     async for station in stations:
-        if station.red:
-            line = 'red'
-        elif station.blue:
-            line = 'blue'
-        elif station.green:
-            line = 'green'
-
-        transformed_station = TransformedStation(station.station_id, station.station_name, station.order, line)
+        transformed_station = TransformedStation(station.station_id, station.station_name, station.order, station_line(station))
         table[transformed_station.station_id] = transformed_station
-        return transformed_station
+        logger.info(f"station: {transformed_station.station_name}")
+        await out_topic.send(key=str(transformed_station.station_id), value=transformed_station)
 
+def station_line(station):
+    if station.red:
+        return 'red'
+    elif station.blue:
+        return 'blue'
+    elif station.green:
+        return 'green'
 
 if __name__ == "__main__":
     app.main()

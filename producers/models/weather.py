@@ -41,7 +41,7 @@ class Weather(Producer):
                 Weather.value_schema = json.load(f)
 
         super().__init__(
-            "weather",
+            "org.chicago.cta.weather.v1",
             key_schema=Weather.key_schema,
             value_schema=Weather.value_schema,
         )
